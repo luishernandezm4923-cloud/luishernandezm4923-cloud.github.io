@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>NutriCheck Escolar · v4</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --pri:#0b6464;--pri-d:#084848;--pri-l:#e4f4f4;--pri-m:#c0e8e8;
+  --acc:#00b894;--acc-l:#e6f9f5;
+  --sec:#111827;--sec2:#1f2937;
+  --ok:#16a34a;--ok-l:#dcfce7;--ok-m:#bbf7d0;
+  --warn:#d97706;--warn-l:#fef3c7;--warn-m:#fde68a;
+  --hi:#ea580c;--hi-l:#ffedd5;
+  --dan:#dc2626;--dan-l:#fee2e2;--dan-m:#fecaca;
+  --bg:#f1f5f9;--bg2:#e8eef4;
+  --card:#fff;--border:#e2e8f0;--border2:#cbd5e1;
+  --t1:#0f172a;--t2:#374151;--t3:#6b7280;--t4:#9ca3af;
+  --r:14px;--r2:10px;--r3:8px;
+  --s1:0 1px 2px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04);
+  --s2:0 4px 6px rgba(0,0,0,.05),0 10px 24px rgba(0,0,0,.08);
+  --s3:0 8px 16px rgba(0,0,0,.06),0 20px 48px rgba(0,0,0,.12);
+  --font:'Plus Jakarta Sans',sans-serif;
+  --head:'Space Grotesk',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --trans:.18s cubic-bezier(.4,0,.2,1);
+}
+html,body{height:100%;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);overflow:hidden;font-size:15px}
+
+/* ── LOADER ─────────────────────────────── */
+#loader{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:9999;transition:opacity .4s,visibility .4s}
+#loader.out{opacity:0;visibility:hidden}
+.loader-logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--pri),var(--acc));display:flex;align-items:center;justify-content:center;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(11,100,100,.4)}50%{box-shadow:0 0 0 14px rgba(11,100,100,0)}}
+.loader-logo svg{width:30px;height:30px;stroke:#fff;fill:none;stroke-width:1.8}
+.loader-bar{width:140px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.loader-fill{height:100%;background:linear-gradient(90deg,var(--pri),var(--acc));border-radius:2px;animation:load 1.2s ease-in-out infinite}
+@keyframes load{0%{width:0;margin-left:0}50%{width:100%;margin-left:0}100%{width:0;margin-left:100%}}
+.loader-txt{font-size:.8rem;color:var(--t3);font-weight:500}
+
+/* ── SPINNER (overlay) ──────────────────── */
+.spin-ov{position:fixed;inset:0;background:rgba(255,255,255,.88);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:8888;opacity:1;transition:opacity .25s}
+.spin-ov.h{opacity:0;pointer-events:none}
+.ring{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--pri);border-radius:50%;animation:spin .65s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-txt{font-size:.8rem;color:var(--t2);font-weight:600}
+
+/* ── TOAST ──────────────────────────────── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--sec);color:#fff;padding:11px 22px;border-radius:50px;font-weight:600;font-size:.8rem;z-index:7777;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none;box-shadow:var(--s2)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── LOGIN ──────────────────────────────── */
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:radial-gradient(ellipse at 20% 50%,#062d2d 0%,#0a1628 60%,#041818 100%);overflow:hidden;z-index:100}
+.login-decor{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.login-decor span{position:absolute;border-radius:50%;background:var(--acc);opacity:.04;animation:float 8s ease-in-out infinite}
+.login-decor span:nth-child(1){width:400px;height:400px;top:-100px;right:-100px;animation-delay:0s}
+.login-decor span:nth-child(2){width:300px;height:300px;bottom:-80px;left:-80px;animation-delay:-3s}
+.login-decor span:nth-child(3){width:200px;height:200px;top:40%;left:10%;opacity:.03;animation-delay:-5s}
+@keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-20px) scale(1.04)}}
+.login-card{background:rgba(255,255,255,.97);border-radius:22px;padding:2.4rem 2rem 2rem;max-width:390px;width:100%;box-shadow:0 40px 80px rgba(0,0,0,.4);position:relative;z-index:1;animation:slideUp .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.brand{display:flex;align-items:center;gap:13px;margin-bottom:6px}
+.brand-ico{width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,var(--pri),var(--acc));display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 8px 20px rgba(11,100,100,.35)}
+.brand-ico svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2}
+.brand-name{font-family:var(--head);font-size:1.25rem;font-weight:700;color:var(--sec);line-height:1.1}
+.brand-sub{font-size:.68rem;color:var(--t3);font-family:var(--mono);display:block;margin-top:2px}
+.badge-ver{display:inline-block;background:var(--pri-l);color:var(--pri);font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:20px;font-family:var(--mono);margin-top:6px;margin-bottom:20px}
+.l-divider{height:1px;background:var(--border);margin-bottom:20px}
+.l-label{font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:6px;display:block}
+.ifield{display:flex;align-items:center;gap:10px;border:1.5px solid var(--border);border-radius:var(--r2);padding:10px 13px;margin-bottom:12px;transition:border-color var(--trans),box-shadow var(--trans)}
+.ifield:focus-within{border-color:var(--pri);box-shadow:0 0 0 3px rgba(11,100,100,.12)}
+.ifield svg{flex-shrink:0;color:var(--t4);width:16px;height:16px;stroke:currentColor;fill:none}
+.ifield input{flex:1;border:none;outline:none;font-family:var(--font);font-size:.88rem;color:var(--t1);background:transparent}
+.btn-primary{border:none;border-radius:var(--r2);padding:13px;font-weight:700;font-size:.9rem;font-family:var(--font);width:100%;cursor:pointer;background:linear-gradient(135deg,var(--pri),var(--acc));color:#fff;letter-spacing:.2px;transition:all var(--trans)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(11,100,100,.4)}
+.btn-primary:active{transform:translateY(0)}
+.l-err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:var(--r3);padding:10px 13px;font-size:.78rem;font-weight:600;margin-bottom:12px;display:none;animation:shake .3s}
+.l-err.on{display:block}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.quick-label{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--t4);margin:18px 0 10px}
+.qbtn{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--r2);cursor:pointer;border:1.5px solid var(--border);margin-bottom:7px;transition:all var(--trans);background:#fff}
+.qbtn:hover{background:var(--bg);border-color:var(--pri-m)}
+.qd{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.qi strong{font-size:.78rem;color:var(--t1);display:block}
+.qi small{font-size:.67rem;color:var(--t3);font-family:var(--mono)}
+
+/* ── APP SHELL ──────────────────────────── */
+#app{display:none;height:100vh;flex-direction:column}
+
+/* topbar */
+.tb{background:#fff;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--border);flex-shrink:0;box-shadow:0 1px 0 var(--border)}
+.tb-left{display:flex;align-items:center;gap:9px}
+.tb-ico{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--pri),var(--acc));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tb-ico svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2}
+.tb-name{font-family:var(--head);font-weight:700;font-size:.97rem;color:var(--sec)}
+.tb-right{display:flex;align-items:center;gap:6px}
+.uchip{background:var(--pri-l);color:var(--pri-d);border-radius:20px;padding:4px 11px;font-size:.72rem;font-weight:700;border:1px solid var(--pri-m);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ico-btn{background:none;border:none;cursor:pointer;padding:7px;border-radius:8px;display:flex;align-items:center;color:var(--t2);transition:background var(--trans)}
+.ico-btn:hover{background:var(--bg)}
+.ico-btn svg{width:18px;height:18px;stroke:currentColor;fill:none}
+
+/* connection banner */
+.demo-banner{background:linear-gradient(90deg,#fef3c7,#fffbeb);border-bottom:1px solid var(--warn-m);padding:6px 16px;font-size:.72rem;font-weight:600;color:#92400e;display:none;text-align:center;gap:6px;align-items:center;justify-content:center}
+.demo-banner.on{display:flex}
+
+/* content + nav */
+.content{flex:1;overflow-y:auto;padding-bottom:70px;-webkit-overflow-scrolling:touch}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;padding:6px 10px 8px;z-index:20;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+.nbt{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.63rem;font-weight:700;color:var(--t3);padding:6px 4px;border-radius:10px;cursor:pointer;transition:all var(--trans);font-family:var(--font);letter-spacing:.2px}
+.nbt svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;transition:all var(--trans)}
+.nbt.on{color:var(--pri);background:var(--pri-l)}
+.nbt.on svg{stroke:var(--pri)}
+
+/* pages */
+.page{display:none}
+.page.ap{display:block;animation:pgIn .2s ease}
+@keyframes pgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SHARED COMPONENTS ──────────────────── */
+.card{background:var(--card);border-radius:var(--r);padding:16px;margin:10px 12px;box-shadow:var(--s1)}
+.card-title{font-family:var(--head);font-size:.85rem;font-weight:700;color:var(--t1);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.ph{padding:14px 12px 4px}
+.ph h2{font-family:var(--head);font-size:1.25rem;font-weight:700;color:var(--t1)}
+.ph p{font-size:.74rem;color:var(--t3);margin-top:3px}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:.65rem;font-weight:700;letter-spacing:.15px}
+.bn{background:var(--ok-l);color:#166534}
+.bb{background:var(--warn-l);color:#92400e}
+.bs{background:var(--hi-l);color:#9a3412}
+.bo{background:var(--dan-l);color:#991b1b}
+
+/* avatars */
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0;font-size:.82rem;font-family:var(--head)}
+.avn{background:linear-gradient(135deg,#16a34a,#22c55e)}
+.avb{background:linear-gradient(135deg,#b45309,#f59e0b)}
+.avs{background:linear-gradient(135deg,#c2410c,#f97316)}
+.avo{background:linear-gradient(135deg,#991b1b,#ef4444)}
+
+/* ── DASHBOARD ──────────────────────────── */
+/* KPI grid — visualmente renovado */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:10px 12px 0}
+.kpi{border-radius:var(--r);padding:14px 14px 12px;cursor:pointer;transition:all var(--trans);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.12)}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--s2)}
+.kpi:active{transform:translateY(0)}
+.kpi.k-total{background:linear-gradient(135deg,var(--sec),var(--sec2));color:#fff}
+.kpi.k-ok   {background:linear-gradient(135deg,#166534,#16a34a);color:#fff}
+.kpi.k-bajo {background:linear-gradient(135deg,#92400e,#d97706);color:#fff}
+.kpi.k-sobre{background:linear-gradient(135deg,#9a3412,#ea580c);color:#fff}
+.kpi.k-obes {background:linear-gradient(135deg,#7f1d1d,#dc2626);color:#fff;grid-column:span 2}
+.kpi-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;opacity:.75;margin-bottom:5px}
+.kpi-val{font-family:var(--mono);font-size:2.1rem;font-weight:600;line-height:1;letter-spacing:-1px}
+.kpi-sub{font-size:.67rem;opacity:.7;margin-top:5px}
+.kpi-icon{position:absolute;bottom:10px;right:12px;font-size:1.4rem;opacity:.2}
+
+/* alerts */
+.alert-row{margin:6px 12px;border-radius:var(--r2);padding:11px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:transform var(--trans)}
+.alert-row:hover{transform:translateX(3px)}
+.ar-danger {background:var(--dan-l);border-left:3px solid var(--dan)}
+.ar-warning{background:var(--warn-l);border-left:3px solid var(--warn)}
+.ar-info   {background:var(--pri-l);border-left:3px solid var(--pri)}
+.alert-row b{font-size:.8rem;display:block}
+.alert-row span{font-size:.72rem;color:var(--t2)}
+
+/* donut section */
+.chart-section{display:flex;gap:12px;align-items:center}
+.chart-section canvas{max-height:150px;flex:0 0 150px}
+.legend{display:flex;flex-direction:column;gap:7px;flex:1}
+.leg{display:flex;align-items:center;gap:8px;font-size:.75rem}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.leg strong{font-size:.88rem;margin-left:auto;font-family:var(--mono)}
+
+/* risk bars */
+.rbar-row{margin-bottom:11px}
+.rbar-head{display:flex;justify-content:space-between;font-size:.76rem;font-weight:600;margin-bottom:4px;color:var(--t2)}
+.rbar-track{background:var(--bg2);border-radius:6px;height:7px;overflow:hidden}
+.rbar-fill{height:100%;border-radius:6px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.rb-ok{background:linear-gradient(90deg,#16a34a,#22c55e)}
+.rb-med{background:linear-gradient(90deg,#d97706,#f59e0b)}
+.rb-hi{background:linear-gradient(90deg,#dc2626,#ef4444)}
+
+/* top grados */
+.grad-row{background:var(--bg);border-radius:var(--r2);padding:9px 12px;display:flex;align-items:center;gap:10px;margin-bottom:7px;transition:all var(--trans)}
+.grad-row:hover{background:var(--bg2)}
+.rank{width:24px;height:24px;border-radius:50%;background:var(--sec);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0;font-family:var(--head)}
+.rank.r1{background:linear-gradient(135deg,#b45309,#f59e0b)}
+.rank.r2{background:linear-gradient(135deg,var(--t3),var(--t2))}
+.rank.r3{background:linear-gradient(135deg,#92400e,#d97706)}
+
+/* mejoras */
+.mej-row{background:var(--ok-l);border-radius:var(--r2);padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:transform var(--trans);border:1px solid var(--ok-m)}
+.mej-row:hover{transform:translateX(3px)}
+
+/* mini buttons */
+.mini-bar{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px}
+.mini-btn{background:var(--bg);border:1px solid var(--border);border-radius:var(--r3);padding:6px 12px;font-size:.73rem;font-weight:600;cursor:pointer;font-family:var(--font);color:var(--t2);transition:all var(--trans);display:flex;align-items:center;gap:5px}
+.mini-btn:hover{background:var(--bg2);border-color:var(--border2)}
+
+/* ── CALCULADORA RÁPIDA (nueva sección) ─ */
+.calc-card{background:linear-gradient(135deg,var(--sec),var(--sec2));border-radius:var(--r);padding:16px;margin:10px 12px;color:#fff;box-shadow:var(--s2)}
+.calc-title{font-family:var(--head);font-size:.85rem;font-weight:700;margin-bottom:12px;opacity:.85;display:flex;align-items:center;gap:7px}
+.calc-row{display:flex;gap:8px;margin-bottom:10px}
+.calc-field{flex:1}
+.calc-field label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.6;display:block;margin-bottom:4px}
+.calc-input{width:100%;padding:9px 11px;border:1.5px solid rgba(255,255,255,.2);border-radius:var(--r3);font-family:var(--mono);font-size:.9rem;background:rgba(255,255,255,.1);color:#fff;outline:none;transition:border-color var(--trans)}
+.calc-input::placeholder{opacity:.4}
+.calc-input:focus{border-color:rgba(255,255,255,.5)}
+.calc-result{background:rgba(255,255,255,.1);border-radius:var(--r2);padding:12px;display:flex;align-items:center;justify-content:space-between;margin-top:2px}
+.calc-imc-val{font-family:var(--mono);font-size:1.8rem;font-weight:600;line-height:1}
+.calc-status{font-size:.78rem;font-weight:700;margin-top:2px}
+.calc-whtr{font-size:.7rem;opacity:.65;font-family:var(--mono);margin-top:2px}
+.calc-placeholder{font-size:.78rem;opacity:.5;text-align:center;padding:4px}
+
+/* ── ALUMNOS ────────────────────────────── */
+.fbar{background:#fff;border-bottom:1px solid var(--border);padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.fg label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);display:block;margin-bottom:4px}
+.fsel{padding:7px 10px;border-radius:var(--r3);border:1.5px solid var(--border);font-family:var(--font);font-size:.78rem;color:var(--t1);background:#fff;transition:border-color var(--trans);min-width:120px}
+.fsel:focus{outline:none;border-color:var(--pri)}
+.search-bar{margin:9px 12px;background:#fff;border-radius:30px;padding:9px 15px;display:flex;gap:8px;align-items:center;border:1.5px solid var(--border);box-shadow:var(--s1);transition:border-color var(--trans),box-shadow var(--trans)}
+.search-bar:focus-within{border-color:var(--pri);box-shadow:0 0 0 3px rgba(11,100,100,.1)}
+.search-bar input{flex:1;border:none;outline:none;font-family:var(--font);font-size:.84rem;background:transparent;color:var(--t1)}
+.chips{display:flex;gap:7px;padding:0 12px 9px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:5px 13px;border-radius:20px;font-size:.68rem;font-weight:700;background:#fff;border:1.5px solid var(--border);white-space:nowrap;cursor:pointer;transition:all var(--trans);color:var(--t2)}
+.chip.on{background:var(--pri);color:#fff;border-color:var(--pri);box-shadow:0 2px 8px rgba(11,100,100,.3)}
+.list-wrap{padding:0 12px 8px}
+
+/* alumno item */
+.al{background:#fff;border-radius:var(--r);padding:12px;margin-bottom:7px;display:flex;align-items:center;gap:11px;cursor:pointer;box-shadow:var(--s1);transition:all var(--trans);border-left:4px solid transparent}
+.al:hover{transform:translateY(-1px);box-shadow:var(--s2)}
+.al.bl-n{border-left-color:var(--ok)}
+.al.bl-b{border-left-color:var(--warn)}
+.al.bl-s{border-left-color:var(--hi)}
+.al.bl-o{border-left-color:var(--dan)}
+.al.crit{background:#fff8f8}
+.al-info{flex:1;min-width:0}
+.al-name{font-weight:700;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t1)}
+.al-sub{font-size:.7rem;color:var(--t2);margin-top:2px;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.al-contact{font-size:.67rem;color:var(--t3);margin-top:3px}
+.al-stats{flex-shrink:0;text-align:right}
+.al-imc{font-family:var(--mono);font-size:.82rem;font-weight:600;color:var(--t2);line-height:1.4}
+.al-whtr{font-family:var(--mono);font-size:.65rem;color:var(--t3)}
+
+/* count indicator */
+.list-count{padding:0 12px 6px;font-size:.72rem;color:var(--t3);font-weight:500}
+
+/* ── DETALLE ─────────────────────────────── */
+.backbar{background:#fff;padding:13px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;cursor:pointer}
+.backbar svg{width:19px;height:19px;stroke:var(--t3);fill:none}
+.backbar span{font-size:.86rem;font-weight:600;color:var(--t2)}
+
+/* hero card del alumno */
+.det-hero{background:linear-gradient(135deg,var(--pri-d),var(--pri));margin:10px 12px;border-radius:var(--r);padding:20px 16px;color:#fff;box-shadow:var(--s2);position:relative;overflow:hidden}
+.det-hero::after{content:'';position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.06);top:-60px;right:-60px}
+.det-av{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.2);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;margin-bottom:12px;border:2px solid rgba(255,255,255,.3);font-family:var(--head)}
+.det-name{font-family:var(--head);font-size:1.05rem;font-weight:700;margin-bottom:4px}
+.det-meta{font-size:.74rem;opacity:.75;margin-bottom:12px}
+.det-chips{display:flex;gap:7px;flex-wrap:wrap}
+.det-chip{background:rgba(255,255,255,.15);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 11px;font-size:.68rem;font-weight:600}
+.det-chip.ok{background:rgba(22,163,74,.3);border-color:rgba(22,163,74,.5)}
+.det-chip.warn{background:rgba(220,38,38,.3);border-color:rgba(220,38,38,.5)}
+
+/* stat boxes */
+.stat-grid{display:flex;gap:8px;flex-wrap:wrap}
+.sbox{flex:1;min-width:70px;background:var(--bg);border-radius:var(--r2);padding:11px;text-align:center;transition:transform var(--trans)}
+.sbox:hover{transform:scale(1.02)}
+.sv{font-family:var(--mono);font-size:1.2rem;font-weight:600;line-height:1}
+.sl{font-size:.58rem;color:var(--t3);font-weight:700;margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
+
+/* OMS scale */
+.oms-scale{position:relative;height:12px;border-radius:8px;overflow:visible;margin:12px 0 8px;background:linear-gradient(to right,#16a34a 0%,#16a34a 28%,#d97706 28%,#d97706 50%,#ea580c 50%,#ea580c 70%,#dc2626 70%,#dc2626 100%)}
+.oms-needle{position:absolute;top:-5px;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--t1);transform:translateX(-50%);box-shadow:0 2px 8px rgba(0,0,0,.2);transition:left .6s cubic-bezier(.34,1.2,.64,1);z-index:1}
+.oms-ticks{display:flex;justify-content:space-between;font-size:.58rem;color:var(--t3);font-family:var(--mono);margin-top:2px}
+.oms-legend{display:flex;gap:4px;margin-top:8px;font-size:.6rem}
+.oms-seg{flex:1;text-align:center;padding:3px 2px;border-radius:4px;font-weight:600}
+.oms-seg.s1{background:var(--ok-l);color:#166534}
+.oms-seg.s2{background:var(--warn-l);color:#92400e}
+.oms-seg.s3{background:var(--hi-l);color:#9a3412}
+.oms-seg.s4{background:var(--dan-l);color:#991b1b}
+
+/* WHtR scale */
+.whtr-scale{height:10px;border-radius:6px;background:linear-gradient(to right,#16a34a 0%,#16a34a 50%,#dc2626 50%,#dc2626 100%);margin:10px 0 5px;position:relative;overflow:visible}
+.whtr-needle{position:absolute;top:-4px;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--t1);transform:translateX(-50%);box-shadow:0 2px 8px rgba(0,0,0,.2);transition:left .6s cubic-bezier(.34,1.2,.64,1)}
+
+/* recommendation */
+.rec{background:linear-gradient(135deg,var(--pri-l),#f0fbfb);border-left:3px solid var(--pri);border-radius:var(--r2);padding:13px;font-size:.82rem;line-height:1.65;color:var(--t2)}
+.rec.urgent{background:var(--dan-l);border-left-color:var(--dan)}
+
+/* historial */
+.hist-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bg2);font-size:.78rem;gap:8px}
+.hist-item:last-child{border-bottom:none}
+.hist-date{font-family:var(--mono);font-size:.68rem;color:var(--t3);flex-shrink:0}
+.hist-vals{color:var(--t2)}
+.hist-imc{font-family:var(--mono);font-weight:600}
+
+/* contact card */
+.contact-card{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.phone-pill{background:var(--pri-l);border:1.5px solid var(--pri-m);border-radius:20px;padding:7px 14px;font-weight:700;font-size:.78rem;color:var(--pri-d);font-family:var(--mono);cursor:pointer;transition:all var(--trans)}
+.phone-pill:hover{background:var(--pri);color:#fff}
+
+/* acciones */
+.acts{padding:10px 12px;display:flex;flex-direction:column;gap:8px;margin-bottom:80px}
+.btn-act{border:none;border-radius:var(--r2);padding:13px;font-size:.84rem;font-weight:700;cursor:pointer;font-family:var(--font);transition:all var(--trans);width:100%;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.1px}
+.btn-outline{background:#fff;border:1.5px solid var(--border);color:var(--t1)}
+.btn-outline:hover{background:var(--bg)}
+.btn-green{background:linear-gradient(135deg,#166534,var(--ok));color:#fff;box-shadow:0 4px 12px rgba(22,163,74,.3)}
+.btn-green:hover{filter:brightness(1.08)}
+.btn-red{background:linear-gradient(135deg,#7f1d1d,var(--dan));color:#fff;box-shadow:0 4px 12px rgba(220,38,38,.3)}
+.btn-red:hover{filter:brightness(1.08)}
+.btn-done{background:var(--ok-l);color:#166534;cursor:default;border:1px solid var(--ok-m)}
+.btn-warn{background:linear-gradient(135deg,#92400e,var(--warn));color:#fff}
+
+/* ── MODAL ───────────────────────────────── */
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;z-index:500;visibility:hidden;opacity:0;transition:all .25s}
+.modal.on{visibility:visible;opacity:1}
+.msheet{background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:20px;max-height:93vh;overflow-y:auto;transform:translateY(20px);transition:transform .25s;-webkit-overflow-scrolling:touch}
+.modal.on .msheet{transform:translateY(0)}
+.mhandle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
+.mt{font-family:var(--head);font-size:1.05rem;font-weight:700;color:var(--t1)}
+.ms{font-size:.77rem;color:var(--t3);margin-top:3px;margin-bottom:18px}
+.mf{margin-bottom:12px}
+.mf label{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--t3);display:block;margin-bottom:5px}
+.mi{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--r3);font-family:var(--font);font-size:.86rem;outline:none;transition:border-color var(--trans),box-shadow var(--trans);color:var(--t1)}
+.mi:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(11,100,100,.1)}
+.mrow{display:flex;gap:9px}
+.mrow .mf{flex:1}
+.msec{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--pri);background:var(--pri-l);border-radius:6px;padding:5px 10px;margin:8px 0 12px}
+.mbtn-row{display:flex;gap:8px;margin-top:6px}
+.mbtn-row .btn-act{flex:1}
+
+/* imc preview */
+.imc-prev{border-radius:var(--r2);padding:14px;text-align:center;display:none;border:2px solid;margin-bottom:12px;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+.imc-val{font-family:var(--mono);font-size:2rem;font-weight:600;line-height:1}
+.imc-est{font-size:.8rem;font-weight:700;margin-top:3px}
+.imc-whtr{font-size:.7rem;color:var(--t3);margin-top:3px;font-family:var(--mono)}
+.mini-oms{height:6px;border-radius:4px;background:linear-gradient(to right,#16a34a 0%,#16a34a 28%,#d97706 28%,#d97706 50%,#ea580c 50%,#ea580c 70%,#dc2626 70%,#dc2626 100%);margin:10px 0 4px}
+
+/* hint box */
+.hint{background:var(--pri-l);border-left:3px solid var(--pri);border-radius:var(--r3);padding:10px 13px;font-size:.76rem;color:var(--pri-d);margin-bottom:13px}
+
+/* ── PERFIL ──────────────────────────────── */
+.pav{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,var(--pri),var(--acc));display:flex;align-items:center;justify-content:center;font-size:1.7rem;margin:0 auto 14px;box-shadow:0 8px 24px rgba(11,100,100,.35)}
+.pstat{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--bg2);font-size:.82rem}
+.pstat:last-child{border-bottom:none}
+.pstat span{color:var(--t3)}
+.pstat strong{font-family:var(--mono)}
+
+/* ── EMPTY STATE ─────────────────────────── */
+.empty{text-align:center;padding:48px 20px;color:var(--t3)}
+.empty svg{width:40px;height:40px;stroke:var(--t4);fill:none;margin-bottom:12px}
+.empty p{font-size:.82rem;margin-top:4px}
+
+/* ── FOOTER ──────────────────────────────── */
+.footer{text-align:center;font-size:.62rem;color:var(--t4);padding:10px 12px 4px;font-family:var(--mono)}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- LOADER INICIAL -->
+<div id="loader">
+  <div class="loader-logo">
+    <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+  </div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+  <div class="loader-txt">Iniciando NutriCheck Escolar…</div>
+</div>
+
+<!-- SPINNER -->
+<div id="spinOv" class="spin-ov h">
+  <div class="ring"></div>
+  <div class="spin-txt" id="spinTxt">Procesando…</div>
+</div>
+
+<!-- TOAST -->
+<div id="toastEl" class="toast"></div>
+
+<!-- ════ LOGIN ════════════════════════════ -->
+<div id="login" style="display:none">
+  <div class="login-decor"><span></span><span></span><span></span></div>
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-ico">
+        <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">NutriCheck Escolar</div>
+        <small class="brand-sub">I.E. Cap. FAP Renán Elías Olivera · Pisco</small>
+      </div>
+    </div>
+    <span class="badge-ver">v4.0 · OMS MINSA 2023</span>
+    <div class="l-divider"></div>
+    <div id="lErr" class="l-err"></div>
+    <label class="l-label">Correo institucional</label>
+    <div class="ifield">
+      <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+      <input type="email" id="lEmail" placeholder="correo@institucion.edu.pe" autocomplete="email">
+    </div>
+    <label class="l-label">Contraseña</label>
+    <div class="ifield">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      <input type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Ingresar al sistema →</button>
+    <p class="quick-label">Accesos rápidos</p>
+    <div class="qbtn" onclick="setDemo('salud@feliperenan.edu.pe','salud123')">
+      <div class="qd" style="background:var(--pri)"></div>
+      <div class="qi"><strong>🩺 Personal de Salud</strong><small>salud@feliperenan.edu.pe</small></div>
+    </div>
+    <div class="qbtn" onclick="setDemo('ugel@pisco.gob.pe','ugel123')">
+      <div class="qd" style="background:var(--sec)"></div>
+      <div class="qi"><strong>📘 Directivo UGEL</strong><small>ugel@pisco.gob.pe</small></div>
+    </div>
+    <div class="qbtn" onclick="accPublico()">
+      <div class="qd" style="background:var(--acc)"></div>
+      <div class="qi"><strong>👨‍👩‍👧 Acceso Público</strong><small>Apoderados · sin contraseña</small></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ APP ══════════════════════════════ -->
+<div id="app">
+  <div class="tb">
+    <div class="tb-left">
+      <div class="tb-ico"><svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+      <span class="tb-name">NutriCheck</span>
+    </div>
+    <div class="tb-right">
+      <span class="uchip" id="userChip">—</span>
+      <button class="ico-btn" onclick="recargar()" title="Actualizar">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="demo-banner" id="demoBanner">
+    ⚡ Modo demostración — Conecte su Google Sheet para datos reales
+  </div>
+
+  <div class="content" id="contentArea">
+
+    <!-- ── DASHBOARD ─────────────────────── -->
+    <div id="pgDash" class="page ap">
+      <div class="ph">
+        <h2>Monitor Nutricional</h2>
+        <p>I.E. Cap. FAP Renán Elías Olivera · San Andrés, Pisco</p>
+      </div>
+
+      <!-- Calculadora rápida visible siempre -->
+      <div class="calc-card" id="calcCard">
+        <div class="calc-title">⚡ Calculadora rápida — IMC & WHtR</div>
+        <div class="calc-row">
+          <div class="calc-field"><label>Peso (kg)</label><input class="calc-input" type="number" id="cPeso" placeholder="Ej: 35" min="10" max="200" step="0.1" oninput="calcQuick()"></div>
+          <div class="calc-field"><label>Talla (cm)</label><input class="calc-input" type="number" id="cTalla" placeholder="Ej: 140" min="80" max="220" step="0.5" oninput="calcQuick()"></div>
+          <div class="calc-field"><label>Cintura (cm)</label><input class="calc-input" type="number" id="cCintura" placeholder="Opc." min="30" max="150" step="0.5" oninput="calcQuick()"></div>
+        </div>
+        <div class="calc-result" id="calcResult">
+          <div class="calc-placeholder">Ingrese peso y talla para calcular</div>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="kpiBox"></div>
+      <div id="alertBox"></div>
+
+      <div class="card">
+        <div class="card-title">📊 Distribución nutricional</div>
+        <div class="chart-section">
+          <canvas id="pieChart" style="max-height:150px;max-width:150px;"></canvas>
+          <div class="legend" id="legend"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:160px">
+            <div class="card-title">📈 Riesgo por nivel</div>
+            <div id="levelRisk"></div>
+          </div>
+          <div style="flex:1;min-width:160px">
+            <div class="card-title">🏫 Grados en riesgo</div>
+            <div id="topRisk"></div>
+            <button class="mini-btn" onclick="openRiskTable()" style="margin-top:6px">Ver todos →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">✅ Alumnos recuperados</div>
+        <div id="mejoraBox"></div>
+        <div class="mini-bar" style="margin-top:12px">
+          <button class="mini-btn" onclick="exportCSV()">📎 Exportar CSV</button>
+          <button class="mini-btn" onclick="recargar()">🔄 Actualizar</button>
+          <button class="mini-btn" id="btnNuevo" onclick="abrirNuevo()">➕ Nuevo alumno</button>
+        </div>
+      </div>
+      <div class="footer" id="footerTxt"></div>
+    </div>
+
+    <!-- ── ALUMNOS ────────────────────────── -->
+    <div id="pgAlumnos" class="page">
+      <div class="fbar">
+        <div class="fg"><label>Grado</label><select class="fsel" id="fGrado"></select></div>
+        <div class="fg"><label>Sección</label><select class="fsel" id="fSec"></select></div>
+        <div class="fg"><label>Sexo</label><select class="fsel" id="fSex"><option value="">Todos</option><option>Masculino</option><option>Femenino</option></select></div>
+        <button class="mini-btn" onclick="applyFilter()">Filtrar</button>
+        <button class="mini-btn" onclick="clearFilter()">✕ Limpiar</button>
+      </div>
+      <div class="search-bar">
+        <svg width="15" height="15" viewBox="0 0 24 24" stroke="var(--t4)" fill="none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchQ" placeholder="Buscar por nombre, grado, apoderado…" oninput="renderList()">
+      </div>
+      <div class="chips" id="chipRow"></div>
+      <div class="list-count" id="listCount"></div>
+      <div class="list-wrap" id="alumList"></div>
+    </div>
+
+    <!-- ── DETALLE ───────────────────────── -->
+    <div id="pgDetalle" class="page">
+      <div class="backbar" onclick="goBack()">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        <span>Volver a la lista</span>
+      </div>
+      <div id="detBody"></div>
+      <div class="card" id="graficoCard" style="display:none">
+        <div class="card-title">📉 Evolución del IMC</div>
+        <canvas id="evoChart" height="160"></canvas>
+      </div>
+      <div class="acts" id="detActs"></div>
+    </div>
+
+    <!-- ── PERFIL ────────────────────────── -->
+    <div id="pgPerfil" class="page">
+      <div class="card" style="text-align:center">
+        <div class="pav">👤</div>
+        <div style="font-family:var(--head);font-size:1.05rem;font-weight:700" id="pNombre">—</div>
+        <div style="font-size:.75rem;color:var(--t3);margin:4px 0 20px" id="pEmail">—</div>
+        <div id="pStats"></div>
+        <button class="btn-act btn-red" style="margin-top:20px" onclick="doLogout()">Cerrar sesión</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📖 Referencia OMS — Clasificación IMC</div>
+        <div style="font-size:.8rem;color:var(--t2);line-height:1.8">
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bg2)"><span class="badge bo">Bajo Peso Severo</span><span style="font-family:var(--mono)">IMC &lt; 14</span></div>
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bg2)"><span class="badge bb">Bajo Peso</span><span style="font-family:var(--mono)">IMC 14 – 18.4</span></div>
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bg2)"><span class="badge bn">Normal</span><span style="font-family:var(--mono)">IMC 18.5 – 24.9</span></div>
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bg2)"><span class="badge bs">Sobrepeso</span><span style="font-family:var(--mono)">IMC 25 – 29.9</span></div>
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0"><span class="badge bo">Obesidad</span><span style="font-family:var(--mono)">IMC ≥ 30</span></div>
+        </div>
+        <div style="margin-top:14px;font-size:.78rem;color:var(--t2);line-height:1.7">
+          <strong style="display:block;margin-bottom:4px;font-family:var(--head)">WHtR (Índice Cintura/Talla)</strong>
+          Valor normal: &lt; 0.5 · Riesgo abdominal: ≥ 0.5<br>
+          Fórmula: Cintura (cm) ÷ Talla (cm)
+        </div>
+        <div style="margin-top:14px;background:var(--bg);border-radius:var(--r3);padding:10px;font-size:.72rem;color:var(--t3)">Criterios adaptados para escolares peruanos — MINSA 2023</div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <div class="bnav">
+    <button class="nbt on" id="nDash" onclick="goPage('dash')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </button>
+    <button class="nbt" id="nAlum" onclick="goPage('alumnos')">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Alumnos
+    </button>
+    <button class="nbt" id="nPerf" onclick="goPage('perfil')">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Perfil
+    </button>
+  </div>
+</div>
+
+<!-- ════ MODAL: MEDICIÓN ══════════════════ -->
+<div id="mMed" class="modal" onclick="if(event.target===this)closeM('mMed')">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mt" id="mMedT">Nueva Medición</div>
+    <div class="ms" id="mMedS"></div>
+    <div class="mrow">
+      <div class="mf"><label>Peso (kg)</label><input class="mi" type="number" id="mPeso" min="10" max="200" step="0.1" oninput="prevMed()"></div>
+      <div class="mf"><label>Talla (cm)</label><input class="mi" type="number" id="mTalla" min="80" max="220" step="0.5" oninput="prevMed()"></div>
+    </div>
+    <div class="mrow">
+      <div class="mf"><label>Cintura cm <span style="color:var(--t4)">(opcional)</span></label><input class="mi" type="number" id="mCin" min="30" max="150" step="0.5" oninput="prevMed()"></div>
+      <div class="mf"><label>Fecha</label><input class="mi" type="date" id="mFecha"></div>
+    </div>
+    <div class="imc-prev" id="medPrev">
+      <div class="imc-val" id="medPrevV">—</div>
+      <div class="imc-est" id="medPrevE"></div>
+      <div class="imc-whtr" id="medPrevW"></div>
+      <div class="mini-oms"></div>
+    </div>
+    <div class="mbtn-row">
+      <button class="btn-act btn-outline" style="flex:1" onclick="closeM('mMed')">Cancelar</button>
+      <button class="btn-act btn-green" style="flex:2" onclick="saveMed()">💾 Guardar medición</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: REPORTE ═══════════════════ -->
+<div id="mRep" class="modal" onclick="if(event.target===this)closeM('mRep')">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mt" id="repT">Reporte nutricional</div>
+    <div class="ms" id="repS"></div>
+    <div style="background:var(--bg);border-radius:var(--r2);padding:13px;margin-bottom:16px;font-size:.8rem;line-height:1.75;color:var(--t2);white-space:pre-wrap;max-height:220px;overflow-y:auto" id="repBody"></div>
+    <div class="mbtn-row">
+      <button class="btn-act btn-outline" style="flex:1" onclick="closeM('mRep')">Cancelar</button>
+      <button class="btn-act btn-green" style="flex:2" onclick="sendRep()">📲 Enviar por WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: TABLA RIESGO ═════════════ -->
+<div id="mRisk" class="modal" onclick="if(event.target===this)closeM('mRisk')">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mt">Riesgo por grado y sección</div>
+    <div style="overflow-x:auto;margin:14px 0" id="riskTable"></div>
+    <button class="btn-act btn-outline" onclick="closeM('mRisk')">Cerrar</button>
+  </div>
+</div>
+
+<!-- ════ MODAL: NUEVO ALUMNO ═════════════ -->
+<div id="mNuevo" class="modal" onclick="if(event.target===this)closeM('mNuevo')">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mt">Registrar Nuevo Alumno</div>
+    <div class="ms">El IMC y WHtR se calculan automáticamente.</div>
+    <div class="hint">💡 Complete los datos básicos. El sistema asignará el estado nutricional y la recomendación de forma automática.</div>
+    <div class="msec">Datos personales</div>
+    <div class="mf"><label>Nombre completo</label><input class="mi" type="text" id="nNom" placeholder="Apellidos y nombres"></div>
+    <div class="mrow">
+      <div class="mf"><label>Grado</label>
+        <select class="mi" id="nGrado">
+          <option>1° Primaria</option><option>2° Primaria</option><option>3° Primaria</option>
+          <option>4° Primaria</option><option>5° Primaria</option><option>6° Primaria</option>
+          <option>1° Secundaria</option><option>2° Secundaria</option><option>3° Secundaria</option>
+          <option>4° Secundaria</option><option>5° Secundaria</option>
+        </select>
+      </div>
+      <div class="mf"><label>Sección</label><select class="mi" id="nSec"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+    </div>
+    <div class="mrow">
+      <div class="mf"><label>Edad</label><input class="mi" type="number" id="nEdad" min="5" max="20" placeholder="años"></div>
+      <div class="mf"><label>Sexo</label><select class="mi" id="nSexo"><option>Masculino</option><option>Femenino</option></select></div>
+    </div>
+    <div class="msec">Medidas antropométricas</div>
+    <div class="mrow">
+      <div class="mf"><label>Peso (kg)</label><input class="mi" type="number" id="nPeso" min="10" max="200" step="0.1" oninput="prevNuevo()"></div>
+      <div class="mf"><label>Talla (cm)</label><input class="mi" type="number" id="nTalla" min="80" max="220" step="0.5" oninput="prevNuevo()"></div>
+    </div>
+    <div class="mf"><label>Cintura (cm) <span style="color:var(--t4)">(muy recomendado)</span></label><input class="mi" type="number" id="nCin" min="30" max="150" step="0.5" oninput="prevNuevo()"></div>
+    <div class="imc-prev" id="nuevoP">
+      <div class="imc-val" id="nPrevV">—</div>
+      <div class="imc-est" id="nPrevE"></div>
+      <div class="imc-whtr" id="nPrevW"></div>
+    </div>
+    <div class="msec">Datos del apoderado</div>
+    <div class="mf"><label>Nombre del apoderado</label><input class="mi" type="text" id="nApod" placeholder="Nombres y apellidos"></div>
+    <div class="mf"><label>Teléfono (con código de país)</label><input class="mi" type="text" id="nTel" placeholder="51987654321"></div>
+    <div class="mf"><label>Recomendación <span style="color:var(--t4)">(se genera automáticamente)</span></label><textarea class="mi" id="nRec" rows="2" style="resize:vertical" placeholder="Se asignará según estado nutricional calculado"></textarea></div>
+    <div class="mbtn-row">
+      <button class="btn-act btn-outline" style="flex:1" onclick="closeM('mNuevo')">Cancelar</button>
+      <button class="btn-act btn-green" style="flex:2" onclick="saveNuevo()">✅ Registrar alumno</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  CONFIGURACIÓN — Pegue aquí la URL de su Apps Script
+// ══════════════════════════════════════════════════════════
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbx9j8dI1S-QqrnFD7MkXxgEGDBA__G3YoGSEtvxD6uU3XSfA50QPvva-8PSGejTCQ-Kcw/exec";
+
+// ── Estado global ─────────────────────────────────────────
+let DATA = [], cur = null, curFilter = "todos";
+let modo = "", user = {};
+let fG="", fS="", fX="";
+let pieC=null, evoC=null, allGrps=[];
+let isDemo = false;
+
+// ── Helpers ───────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+const q$ = s  => document.querySelector(s);
+const hoy = () => new Date().toISOString().split("T")[0];
+const pct = (a,b) => b ? Math.round(a/b*100) : 0;
+const ini = n  => n.split(" ").filter(Boolean).map(w=>w[0]).slice(0,2).join("").toUpperCase();
+
+function spin(t="Procesando…"){ $("spinTxt").textContent=t; $("spinOv").classList.remove("h") }
+function unspin(){ $("spinOv").classList.add("h") }
+
+function toast(msg,ms=3200){
+  const el=$("toastEl"); el.textContent=msg; el.classList.add("on");
+  setTimeout(()=>el.classList.remove("on"),ms);
+}
+
+function openM(id){ $(id).classList.add("on") }
+function closeM(id){ $(id).classList.remove("on") }
+
+// Estado OMS
+function calcEstado(imc){
+  if(imc<14)   return "Bajo Peso Severo";
+  if(imc<18.5) return "Bajo Peso";
+  if(imc<25)   return "Normal";
+  if(imc<30)   return "Sobrepeso";
+  return "Obesidad";
+}
+function eBase(e){
+  if(!e) return "Normal";
+  const s=e.toLowerCase();
+  if(s.includes("bajo")) return "Bajo Peso";
+  if(s.includes("sobre")) return "Sobrepeso";
+  if(s.includes("obes")) return "Obesidad";
+  return "Normal";
+}
+const BC  = b=>({Normal:"bn","Bajo Peso":"bb",Sobrepeso:"bs",Obesidad:"bo"}[b]||"bn");
+const AVC = b=>({Normal:"avn","Bajo Peso":"avb",Sobrepeso:"avs",Obesidad:"avo"}[b]||"avn");
+const BLC = b=>({Normal:"bl-n","Bajo Peso":"bl-b",Sobrepeso:"bl-s",Obesidad:"bl-o"}[b]||"bl-n");
+const EC  = b=>({Normal:"var(--ok)","Bajo Peso":"var(--warn)",Sobrepeso:"var(--hi)",Obesidad:"var(--dan)"}[b]||"var(--ok)");
+const PIE = ["#16a34a","#d97706","#ea580c","#dc2626"];
+
+function autoRec(est, nom="El alumno"){
+  const m={
+    "Normal":"Estado nutricional adecuado. Mantener hábitos saludables y control anual.",
+    "Bajo Peso":`${nom} requiere evaluación nutricional. Aumentar ingesta calórica supervisada. Consulta con nutricionista recomendada.`,
+    "Bajo Peso Severo":`⚠️ DERIVAR URGENTE: ${nom} presenta bajo peso severo. Derivar de inmediato al Centro de Salud San Andrés para evaluación médica completa.`,
+    "Sobrepeso":"Iniciar actividad física regular. Reducir alimentos ultraprocesados y bebidas azucaradas. Consulta nutricional en 3 meses.",
+    "Obesidad":`⚠️ DERIVAR URGENTE al Centro de Salud San Andrés. Evaluación médica completa. Iniciar programa de actividad física y dieta supervisada.`
+  };
+  return m[est]||m["Normal"];
+}
+
+// ── Calculadora rápida (dashboard) ───────────────────────
+function calcQuick(){
+  const p=parseFloat($("cPeso").value), t=parseFloat($("cTalla").value)/100;
+  const c=parseFloat($("cCintura").value)||null;
+  const el=$("calcResult");
+  if(p>0&&t>0){
+    const imc=+(p/(t*t)).toFixed(1);
+    const est=calcEstado(imc), eb=eBase(est);
+    const whtr=c?+(c/(t*100)).toFixed(2):null;
+    const col=EC(eb);
+    el.innerHTML=`
+      <div>
+        <div class="calc-imc-val" style="color:${col}">${imc}</div>
+        <div class="calc-status" style="color:${col}">${est}</div>
+        ${whtr?`<div class="calc-whtr">WHtR: ${whtr} ${whtr>=0.5?"⚠️ Riesgo abdominal":"✅ Sin riesgo"}</div>`:""}
+      </div>
+      <div style="text-align:right;font-size:.68rem;opacity:.55;font-family:var(--mono)">
+        Peso: ${p}kg<br>Talla: ${(t*100).toFixed(0)}cm${c?`<br>Cintura: ${c}cm`:""}
+      </div>`;
+  } else {
+    el.innerHTML=`<div class="calc-placeholder">Ingrese peso y talla para calcular</div>`;
+  }
+}
+
+// ── LOGIN ─────────────────────────────────────────────────
+function setDemo(e,p){ $("lEmail").value=e; $("lPass").value=p; }
+function accPublico(){
+  modo="publico"; user={email:"publico",rol:"publico",nombre:"Apoderado / Visitante"};
+  enterApp("Acceso Público 👪");
+}
+
+async function doLogin(){
+  const email=$("lEmail").value.trim().toLowerCase();
+  const pass =$("lPass").value;
+  const err  =$("lErr");
+  err.classList.remove("on");
+  if(!email||!pass){ err.textContent="⚠️ Complete todos los campos."; err.classList.add("on"); return; }
+  spin("Verificando credenciales…");
+  try{
+    const r=await fetch(`${SHEET_URL}?action=login&email=${encodeURIComponent(email)}&pass=${encodeURIComponent(pass)}&t=${Date.now()}`);
+    const d=await r.json(); unspin();
+    if(d.ok){ modo=d.rol||"salud"; user={email:d.email||email,rol:d.rol,nombre:d.nombre||email}; enterApp(modo==="salud"?"Personal Salud 🩺":"UGEL Pisco 📘"); }
+    else fallback(email,pass,err);
+  }catch{ unspin(); fallback(email,pass,err); }
+}
+function fallback(email,pass,err){
+  const C=[{e:"salud@feliperenan.edu.pe",p:"salud123",rol:"salud",nombre:"Personal de Salud"},{e:"ugel@pisco.gob.pe",p:"ugel123",rol:"ugel",nombre:"UGEL Pisco"}];
+  const f=C.find(c=>c.e===email&&c.p===pass);
+  if(f){ modo=f.rol; user={email:f.e,rol:f.rol,nombre:f.nombre}; enterApp(modo==="salud"?"Personal Salud 🩺":"UGEL Pisco 📘"); }
+  else{ err.textContent="❌ Credenciales incorrectas. Verifique e intente de nuevo."; err.classList.add("on"); unspin(); }
+}
+
+function enterApp(label){
+  $("login").style.display="none";
+  $("app").style.display="flex";
+  $("userChip").textContent=label;
+  $("pNombre").textContent=user.nombre||user.email;
+  $("pEmail").textContent=user.email;
+  // ocultar botón nuevo alumno en modo público
+  if(modo==="publico") $("btnNuevo").style.display="none";
+  loadData();
+}
+function doLogout(){
+  $("login").style.display="flex"; $("app").style.display="none";
+  $("lEmail").value=""; $("lPass").value="";
+  DATA=[]; cur=null; isDemo=false;
+  $("demoBanner").classList.remove("on");
+}
+
+// ── DATOS ─────────────────────────────────────────────────
+async function loadData(){
+  spin("Cargando datos del Google Sheet…");
+  try{
+    const r=await fetch(`${SHEET_URL}?action=getData&t=${Date.now()}`);
+    if(!r.ok) throw 0;
+    const d=await r.json();
+    if(d.alumnos&&d.alumnos.length>0){ parseData(d); isDemo=false; $("demoBanner").classList.remove("on"); $("footerTxt").textContent=`Actualizado: ${new Date().toLocaleString("es-PE")} · ${DATA.length} alumnos`; }
+    else throw 0;
+  }catch{ loadDemo(); isDemo=true; $("demoBanner").classList.add("on"); $("footerTxt").textContent=`Modo demo · ${DATA.length} alumnos de muestra`; }
+  unspin(); renderDash(); renderList(); renderPerfil();
+}
+
+function parseData(d){
+  DATA=d.alumnos.map(a=>{
+    const imc=Number(a.imc)||0, eb=eBase(a.estado||calcEstado(imc));
+    return{id:Number(a.id),nombre:String(a.nombre||""),grado:String(a.grado||""),seccion:String(a.seccion||"A"),edad:Number(a.edad)||0,sexo:String(a.sexo||""),peso:Number(a.peso)||0,talla:Number(a.talla)||0,imc,cintura_cm:a.cintura_cm?Number(a.cintura_cm):null,whtr:a.whtr?Number(a.whtr):null,estado:a.estado||calcEstado(imc),eb,derivado:isTrue(a.derivado),mejoro:isTrue(a.mejoro),recomendacion:a.recomendacion||autoRec(calcEstado(imc),a.nombre),apoderado:String(a.apoderado||"No registrado"),telefono:String(a.telefono||""),historial:[]};
+  });
+  if(d.historial) DATA.forEach(a=>{ a.historial=d.historial.filter(h=>Number(h.id_alumno)===a.id).map(h=>({fecha:h.fecha,peso:Number(h.peso),talla:Number(h.talla),imc:Number(h.imc),estado:h.estado})).sort((x,y)=>x.fecha>y.fecha?1:-1); if(!a.historial.length&&a.imc) a.historial=[{fecha:hoy(),peso:a.peso,talla:a.talla,imc:a.imc,estado:a.estado}]; });
+}
+
+const isTrue = v => v===true||String(v).toUpperCase()==="TRUE";
+function recargar(){ loadData(); toast("🔄 Actualizando datos…"); }
+
+// ── DEMO DATA ─────────────────────────────────────────────
+function loadDemo(){
+  const raw=[
+    {id:1,nombre:"Mateo Quispe Torres",grado:"1° Primaria",seccion:"A",edad:8,sexo:"Masculino",peso:25,talla:120,imc:17.4,cintura_cm:55,whtr:0.46,estado:"Normal",apoderado:"Carmen Torres",telefono:"51937654361",derivado:false,mejoro:false},
+    {id:2,nombre:"Valentina Rojas Cruz",grado:"1° Primaria",seccion:"A",edad:7,sexo:"Femenino",peso:17,talla:117,imc:12.4,cintura_cm:50,whtr:0.43,estado:"Bajo Peso Severo",apoderado:"María Cruz",telefono:"51987654302",derivado:true,mejoro:true},
+    {id:3,nombre:"Alver Sullca Huaman",grado:"3° Secundaria",seccion:"C",edad:15,sexo:"Masculino",peso:78,talla:162,imc:29.7,cintura_cm:89,whtr:0.55,estado:"Sobrepeso",apoderado:"Rosa Huaman",telefono:"51987654309",derivado:false,mejoro:false},
+    {id:4,nombre:"Luciana Mendez Paz",grado:"2° Primaria",seccion:"B",edad:9,sexo:"Femenino",peso:38,talla:128,imc:23.2,cintura_cm:75,whtr:0.59,estado:"Obesidad",apoderado:"Jorge Mendez",telefono:"51956789012",derivado:false,mejoro:false},
+    {id:5,nombre:"Diego Castillo Ramos",grado:"5° Primaria",seccion:"A",edad:11,sexo:"Masculino",peso:35,talla:140,imc:17.9,cintura_cm:62,whtr:0.44,estado:"Normal",apoderado:"Ana Ramos",telefono:"51912345678",derivado:false,mejoro:false},
+    {id:6,nombre:"Camila Flores Inca",grado:"4° Secundaria",seccion:"A",edad:16,sexo:"Femenino",peso:42,talla:155,imc:17.5,cintura_cm:60,whtr:0.39,estado:"Bajo Peso",apoderado:"Luis Flores",telefono:"51923456789",derivado:false,mejoro:false},
+    {id:7,nombre:"Rodrigo Quispe Vega",grado:"2° Secundaria",seccion:"B",edad:14,sexo:"Masculino",peso:72,talla:165,imc:26.4,cintura_cm:84,whtr:0.51,estado:"Sobrepeso",apoderado:"Elena Vega",telefono:"51934567890",derivado:false,mejoro:false},
+    {id:8,nombre:"Sofía Palomino Rivas",grado:"3° Primaria",seccion:"A",edad:9,sexo:"Femenino",peso:32,talla:132,imc:18.4,cintura_cm:58,whtr:0.44,estado:"Normal",apoderado:"Julia Rivas",telefono:"51945678901",derivado:false,mejoro:false},
+    {id:9,nombre:"Andrés Chávez López",grado:"6° Primaria",seccion:"B",edad:12,sexo:"Masculino",peso:52,talla:148,imc:23.7,cintura_cm:72,whtr:0.49,estado:"Sobrepeso",apoderado:"Pedro López",telefono:"51956780123",derivado:false,mejoro:false},
+    {id:10,nombre:"Daniela Ríos Fuentes",grado:"1° Secundaria",seccion:"A",edad:13,sexo:"Femenino",peso:38,talla:153,imc:16.2,cintura_cm:56,whtr:0.37,estado:"Bajo Peso",apoderado:"Marta Fuentes",telefono:"51967891234",derivado:false,mejoro:false},
+    {id:11,nombre:"Jesús Tapia Huanca",grado:"5° Secundaria",seccion:"C",edad:17,sexo:"Masculino",peso:92,talla:170,imc:31.8,cintura_cm:98,whtr:0.58,estado:"Obesidad",apoderado:"Nelson Tapia",telefono:"51978902345",derivado:true,mejoro:false},
+    {id:12,nombre:"Milagros Cerna Vásquez",grado:"4° Primaria",seccion:"A",edad:10,sexo:"Femenino",peso:29,talla:136,imc:15.7,cintura_cm:52,whtr:0.38,estado:"Bajo Peso",apoderado:"Carmen Vásquez",telefono:"51989013456",derivado:false,mejoro:false},
+    {id:13,nombre:"Carlos Huanca Ríos",grado:"2° Secundaria",seccion:"A",edad:14,sexo:"Masculino",peso:85,talla:168,imc:30.1,cintura_cm:96,whtr:0.57,estado:"Obesidad",apoderado:"Lucía Ríos",telefono:"51990123456",derivado:false,mejoro:false},
+    {id:14,nombre:"Fernanda Silva Torres",grado:"6° Primaria",seccion:"A",edad:12,sexo:"Femenino",peso:30,talla:142,imc:14.9,cintura_cm:53,whtr:0.37,estado:"Bajo Peso",apoderado:"Mario Torres",telefono:"51901234567",derivado:false,mejoro:false},
+  ];
+  DATA=raw.map(a=>({...a,eb:eBase(a.estado),recomendacion:autoRec(eBase(a.estado),a.nombre),historial:[{fecha:hoy(),peso:a.peso,talla:a.talla,imc:a.imc,estado:a.estado}]}));
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────
+function renderDash(){
+  if(!DATA.length) return;
+  const T=DATA.length, N=DATA.filter(a=>a.eb==="Normal").length, B=DATA.filter(a=>a.eb==="Bajo Peso").length, S=DATA.filter(a=>a.eb==="Sobrepeso").length, O=DATA.filter(a=>a.eb==="Obesidad").length;
+
+  $("kpiBox").innerHTML=`
+    <div class="kpi k-total" onclick="fGo('todos')"><div class="kpi-label">Total monitoreados</div><div class="kpi-val">${T}</div><div class="kpi-sub">Alumnos activos</div><div class="kpi-icon">📋</div></div>
+    <div class="kpi k-ok"    onclick="fGo('Normal')"><div class="kpi-label">Estado normal</div><div class="kpi-val">${N}</div><div class="kpi-sub">${pct(N,T)}% del total</div><div class="kpi-icon">✅</div></div>
+    <div class="kpi k-bajo"  onclick="fGo('Bajo Peso')"><div class="kpi-label">Bajo peso</div><div class="kpi-val">${B}</div><div class="kpi-sub">${pct(B,T)}% · Atención</div><div class="kpi-icon">⚠️</div></div>
+    <div class="kpi k-sobre" onclick="fGo('Sobrepeso')"><div class="kpi-label">Sobrepeso</div><div class="kpi-val">${S}</div><div class="kpi-sub">${pct(S,T)}% · Seguimiento</div><div class="kpi-icon">📈</div></div>
+    <div class="kpi k-obes"  onclick="fGo('Obesidad')"><div class="kpi-label">Obesidad — requieren derivación prioritaria al Centro de Salud</div><div class="kpi-val">${O}</div><div class="kpi-sub">${pct(O,T)}% · Derivación urgente</div><div class="kpi-icon">🏥</div></div>`;
+
+  // Alertas
+  let al="";
+  const obND=DATA.filter(a=>a.eb==="Obesidad"&&!a.derivado);
+  const bpS =DATA.filter(a=>a.imc<14);
+  const whtrR=DATA.filter(a=>a.whtr!==null&&a.whtr>=0.5);
+  if(obND.length) al+=`<div class="alert-row ar-danger" onclick="fGo('Obesidad')"><div style="font-size:1.2rem">🔴</div><div><b>${obND.length} alumno(s) con OBESIDAD sin derivar</b><span>Derivación urgente al Centro de Salud San Andrés</span></div></div>`;
+  if(bpS.length)  al+=`<div class="alert-row ar-warning" onclick="fGo('Bajo Peso')"><div style="font-size:1.2rem">🟡</div><div><b>${bpS.length} alumno(s) con BAJO PESO SEVERO (IMC &lt; 14)</b><span>Requieren evaluación médica inmediata</span></div></div>`;
+  if(whtrR.length) al+=`<div class="alert-row ar-info"><div style="font-size:1.2rem">📐</div><div><b>${whtrR.length} alumno(s) con WHtR ≥ 0.5</b><span>Riesgo abdominal aumentado — monitorear</span></div></div>`;
+  $("alertBox").innerHTML=al;
+
+  // Donut
+  if(pieC) pieC.destroy();
+  pieC=new Chart($("pieChart").getContext("2d"),{type:"doughnut",data:{labels:["Normal","Bajo Peso","Sobrepeso","Obesidad"],datasets:[{data:[N,B,S,O],backgroundColor:PIE,borderWidth:0,hoverOffset:4}]},options:{cutout:"72%",plugins:{legend:{display:false}},responsive:true,maintainAspectRatio:true}});
+  $("legend").innerHTML=[["Normal",PIE[0],N],["Bajo Peso",PIE[1],B],["Sobrepeso",PIE[2],S],["Obesidad",PIE[3],O]].map(([l,c,v])=>`<div class="leg"><div class="leg-dot" style="background:${c}"></div><span>${l}</span><strong>${v}</strong></div>`).join("");
+
+  // Riesgo por nivel
+  let pT=0,pR=0,sT=0,sR=0;
+  DATA.forEach(a=>{if(a.grado.includes("Primaria")){pT++;if(a.eb!=="Normal")pR++;}else{sT++;if(a.eb!=="Normal")sR++;}});
+  const pp=pct(pR,pT), sp=pct(sR,sT);
+  $("levelRisk").innerHTML=[["Primaria",pp],["Secundaria",sp]].map(([l,p])=>`<div class="rbar-row"><div class="rbar-head"><span>${l}</span><span>${p}%</span></div><div class="rbar-track"><div class="rbar-fill ${p>=61?"rb-hi":p>=31?"rb-med":"rb-ok"}" style="width:${p}%"></div></div></div>`).join("");
+
+  // Top grados
+  const grps={};
+  DATA.forEach(a=>{const k=`${a.grado}|${a.seccion}`;if(!grps[k])grps[k]={g:a.grado,s:a.seccion,t:0,r:0};grps[k].t++;if(a.eb!=="Normal")grps[k].r++;});
+  allGrps=Object.values(grps).map(g=>({...g,p:pct(g.r,g.t)})).sort((a,b)=>b.p-a.p);
+  $("topRisk").innerHTML=allGrps.slice(0,3).map((g,i)=>`<div class="grad-row"><div class="rank ${i===0?"r1":i===1?"r2":"r3"}">${i+1}</div><div style="flex:1;font-size:.78rem"><strong>${g.g} - ${g.s}</strong></div><div style="font-size:.78rem;font-weight:700;color:${g.p>=61?"var(--dan)":g.p>=31?"var(--hi)":"var(--ok)"};">${g.p}%</div></div>`).join("");
+
+  // Mejoras
+  const mej=DATA.filter(a=>a.mejoro);
+  $("mejoraBox").innerHTML=mej.length?mej.map(a=>`<div class="mej-row" onclick="verDet(${a.id})"><div class="av avn" style="width:36px;height:36px">${ini(a.nombre)}</div><div><strong style="font-size:.82rem">${a.nombre}</strong><br><span style="font-size:.7rem;color:var(--t2)">${a.grado} · ✅ Recuperado</span></div></div>`).join(""):`<div class="empty" style="padding:20px"><p>Sin mejoras registradas aún.</p></div>`;
+
+  // Perfil stats
+  $("pStats").innerHTML=[["Alumnos monitoreados",T],["Con riesgo nutricional",T-N],["Derivados al CS",DATA.filter(a=>a.derivado).length],["Alumnos recuperados",DATA.filter(a=>a.mejoro).length],["Promedio IMC",(DATA.reduce((s,a)=>s+a.imc,0)/T).toFixed(1)]].map(([l,v])=>`<div class="pstat"><span>${l}</span><strong>${v}</strong></div>`).join("");
+}
+
+function fGo(e){ curFilter=e; goPage("alumnos"); renderList(); }
+
+function openRiskTable(){
+  const rows=allGrps.map(g=>`<tr><td style="padding:8px 10px"><strong>${g.g} - ${g.s}</strong></td><td style="text-align:center;padding:8px;font-family:var(--mono)">${g.r}/${g.t}</td><td style="text-align:center;padding:8px;font-weight:700;font-family:var(--mono);color:${g.p>=61?"var(--dan)":g.p>=31?"var(--hi)":"var(--ok)"}">${g.p}%</td></tr>`).join("");
+  $("riskTable").innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:.78rem"><thead><tr style="background:var(--bg)"><th style="padding:8px 10px;text-align:left">Grado / Sección</th><th style="padding:8px">Riesgo</th><th style="padding:8px">%</th></tr></thead><tbody>${rows}</tbody></table>`;
+  openM("mRisk");
+}
+
+// ── ALUMNOS ───────────────────────────────────────────────
+function renderList(){
+  let list=[...DATA];
+  if(curFilter!=="todos") list=list.filter(a=>a.eb===curFilter);
+  if(fG) list=list.filter(a=>a.grado===fG);
+  if(fS) list=list.filter(a=>a.seccion===fS);
+  if(fX) list=list.filter(a=>a.sexo===fX);
+  const q=($("searchQ")?.value||"").toLowerCase();
+  if(q) list=list.filter(a=>a.nombre.toLowerCase().includes(q)||a.grado.toLowerCase().includes(q)||a.apoderado.toLowerCase().includes(q));
+
+  $("listCount").textContent=`${list.length} alumno(s) encontrado(s)`;
+  const pub=modo==="publico";
+  $("alumList").innerHTML=list.length?list.map(a=>{
+    const cr=a.eb==="Obesidad"||(a.imc<14);
+    const ct=!pub?`<div class="al-contact">👪 ${a.apoderado}${a.telefono?` · 📞 ${a.telefono}`:""}</div>`:"";
+    return`<div class="al ${BLC(a.eb)} ${cr?"crit":""}" onclick="verDet(${a.id})">
+      <div class="av ${AVC(a.eb)}" style="width:42px;height:42px">${ini(a.nombre)}</div>
+      <div class="al-info">
+        <div class="al-name">${a.nombre} ${a.derivado?"✅":""}</div>
+        <div class="al-sub">${a.grado} · Secc.${a.seccion} · ${a.edad}a · ${a.sexo.charAt(0)} <span class="badge ${BC(a.eb)}">${a.estado}</span></div>
+        ${ct}
+      </div>
+      <div class="al-stats">
+        <div class="al-imc" style="color:${EC(a.eb)}">${a.imc}</div>
+        <div style="font-size:.55rem;color:var(--t4)">IMC</div>
+        ${a.whtr!==null?`<div class="al-whtr">${a.whtr}</div><div style="font-size:.5rem;color:var(--t4)">WHtR</div>`:""}
+      </div>
+    </div>`;
+  }).join(""):`<div class="empty"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><strong>Sin resultados</strong><p>Prueba con otros filtros o limpia la búsqueda.</p></div>`;
+
+  // chips
+  const cnt={todos:DATA.length};["Normal","Bajo Peso","Sobrepeso","Obesidad"].forEach(e=>{cnt[e]=DATA.filter(a=>a.eb===e).length;});
+  $("chipRow").innerHTML=["todos","Normal","Bajo Peso","Sobrepeso","Obesidad"].map(e=>`<div class="chip ${curFilter===e?"on":""}" onclick="setCF('${e}')">${e==="todos"?"Todos":e} (${cnt[e]||0})</div>`).join("");
+}
+
+function setCF(e){ curFilter=e; renderList(); }
+function initFilters(){
+  const gs=[...new Set(DATA.map(a=>a.grado))].sort((a,b)=>{if(a.includes("Primaria")&&b.includes("Secundaria"))return-1;if(a.includes("Secundaria")&&b.includes("Primaria"))return 1;return parseInt(a)-parseInt(b);});
+  $("fGrado").innerHTML='<option value="">Todos los grados</option>'+gs.map(g=>`<option>${g}</option>`).join("");
+  $("fSec").innerHTML='<option value="">Todas las secciones</option>'+["A","B","C","D"].map(s=>`<option>Sección ${s}</option>`).join("");
+}
+function applyFilter(){ fG=$("fGrado").value; fS=$("fSec").value.replace("Sección ",""); fX=$("fSex").value; renderList(); }
+function clearFilter(){ fG=fS=fX=""; $("fGrado").value=""; $("fSec").value=""; $("fSex").value=""; renderList(); }
+
+// ── DETALLE ───────────────────────────────────────────────
+function verDet(id){
+  cur=DATA.find(a=>a.id===id); if(!cur) return;
+  const a=cur, pub=modo==="publico", col=EC(a.eb);
+  const imcPct=Math.min(96,Math.max(2,((a.imc-10)/30)*100));
+  const whtrPct=a.whtr!==null?Math.min(96,Math.max(2,a.whtr*150)):0;
+  const isUrgent=a.eb==="Obesidad"||(a.imc<14);
+  const histHtml=a.historial&&a.historial.length?a.historial.slice().reverse().slice(0,6).map(h=>`<div class="hist-item"><span class="hist-date">${h.fecha}</span><span class="hist-vals">${h.peso}kg · ${h.talla}cm</span><span class="hist-imc" style="color:${EC(eBase(h.estado))}">${h.imc}</span><span class="badge ${BC(eBase(h.estado))}">${h.estado}</span></div>`).join(""):`<p style="font-size:.78rem;color:var(--t3)">Sin registros históricos.</p>`;
+
+  $("detBody").innerHTML=`
+    <div class="det-hero">
+      <div class="det-av">${ini(a.nombre)}</div>
+      <div class="det-name">${a.nombre}</div>
+      <div class="det-meta">${a.grado} · Sección ${a.seccion} · ${a.edad} años · ${a.sexo}</div>
+      <div class="det-chips">
+        <div class="det-chip">${a.estado}</div>
+        ${a.derivado?'<div class="det-chip ok">✅ Derivado al CS</div>':""}
+        ${a.mejoro?'<div class="det-chip ok">📈 Recuperado</div>':""}
+        ${isUrgent&&!a.derivado?'<div class="det-chip warn">🚨 Derivación urgente</div>':""}
+      </div>
+    </div>
+
+    ${!pub?`<div class="card">
+      <div class="card-title">📏 Medidas antropométricas</div>
+      <div class="stat-grid">
+        <div class="sbox"><div class="sv">${a.peso}</div><div class="sl">Peso (kg)</div></div>
+        <div class="sbox"><div class="sv">${a.talla}</div><div class="sl">Talla (cm)</div></div>
+        <div class="sbox"><div class="sv" style="color:${col}">${a.imc}</div><div class="sl">IMC</div></div>
+        ${a.cintura_cm?`<div class="sbox"><div class="sv">${a.cintura_cm}</div><div class="sl">Cintura (cm)</div></div>`:""}
+        ${a.whtr!==null?`<div class="sbox"><div class="sv" style="color:${a.whtr>=0.5?"var(--dan)":"var(--ok)"}">${a.whtr}</div><div class="sl">WHtR</div></div>`:""}
+      </div>
+    </div>`:""}
+
+    <div class="card">
+      <div class="card-title">🎯 Escala OMS — Estado nutricional</div>
+      <div class="oms-scale">
+        <div class="oms-needle" id="omsSeedle" style="left:${imcPct}%"></div>
+      </div>
+      <div class="oms-ticks"><span>10</span><span>18.5</span><span>25</span><span>30</span><span>40+</span></div>
+      <div class="oms-legend">
+        <div class="oms-seg s1">Bajo peso</div>
+        <div class="oms-seg s2">Normal</div>
+        <div class="oms-seg s3">Sobrepeso</div>
+        <div class="oms-seg s4">Obesidad</div>
+      </div>
+      <div style="margin-top:12px;font-weight:700;font-size:.86rem;color:${col}">IMC ${a.imc} — ${a.estado}</div>
+    </div>
+
+    ${a.whtr!==null?`<div class="card">
+      <div class="card-title">📐 Índice Cintura/Talla (WHtR)</div>
+      <div class="stat-grid" style="margin-bottom:10px">
+        <div class="sbox"><div class="sv" style="color:${a.whtr>=0.5?"var(--dan)":"var(--ok)"}">${a.whtr}</div><div class="sl">WHtR</div></div>
+        <div class="sbox"><div class="sv">${a.whtr>=0.5?"⚠️":"✅"}</div><div class="sl">${a.whtr>=0.5?"Riesgo":"Sin riesgo"}</div></div>
+        ${a.cintura_cm?`<div class="sbox"><div class="sv">${a.cintura_cm}</div><div class="sl">Cintura cm</div></div>`:""}
+      </div>
+      <div class="whtr-scale">
+        <div class="whtr-needle" style="left:${whtrPct}%"></div>
+      </div>
+      <div style="font-size:.7rem;color:var(--t3);margin-top:6px">${a.whtr>=0.5?"⚠️ Riesgo abdominal aumentado":"✅ Sin riesgo abdominal"} · Umbral: 0.5 · Valor: ${a.whtr}</div>
+    </div>`:""}
+
+    <div class="card">
+      <div class="card-title">📋 Recomendación clínica</div>
+      <div class="rec ${isUrgent?"urgent":""}">${a.recomendacion||"Sin recomendación registrada."}</div>
+    </div>
+
+    ${!pub?`<div class="card">
+      <div class="card-title">👪 Apoderado</div>
+      <div class="contact-card">
+        <div><strong style="font-size:.88rem">${a.apoderado}</strong></div>
+        ${a.telefono?`<div class="phone-pill" onclick="window.open('tel:${a.telefono}')">📞 ${a.telefono}</div>`:""}
+      </div>
+    </div>`:""}
+
+    <div class="card">
+      <div class="card-title">📋 Historial de mediciones</div>
+      ${histHtml}
+    </div>`;
+
+  // Gráfico evolución
+  const gc=$("graficoCard");
+  if(a.historial&&a.historial.length>=2){
+    gc.style.display="block";
+    if(evoC) evoC.destroy();
+    evoC=new Chart($("evoChart").getContext("2d"),{type:"line",data:{labels:a.historial.map(h=>h.fecha),datasets:[{label:"IMC",data:a.historial.map(h=>h.imc),borderColor:col,backgroundColor:col+"22",tension:.35,fill:true,pointBackgroundColor:col,pointRadius:5,pointHoverRadius:7}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,grid:{color:"var(--bg2)"}},x:{grid:{display:false}}}}});
+  } else gc.style.display="none";
+
+  // Botones
+  const canEdit=modo==="salud"||modo==="ugel";
+  let acts="";
+  if(canEdit){
+    acts+=`<button class="btn-act btn-outline" onclick="abrirMed(${a.id})">📏 Registrar nueva medición</button>`;
+    if(a.eb!=="Normal"){
+      acts+=`<button class="btn-act btn-green" onclick="openRep()">📲 Enviar reporte al apoderado</button>`;
+      if(!a.derivado) acts+=`<button class="btn-act btn-red" onclick="marcar(${a.id})">🏥 Marcar como derivado al CS</button>`;
+      else acts+=`<button class="btn-act btn-done">✅ Ya derivado al Centro de Salud</button>`;
+      if(!a.mejoro) acts+=`<button class="btn-act btn-warn" onclick="marcarMej(${a.id})">📈 Marcar como recuperado</button>`;
+    }
+  }
+  $("detActs").innerHTML=acts;
+  goPage("detalle");
+}
+
+function goBack(){ goPage("alumnos"); }
+
+// ── MEDICIÓN ──────────────────────────────────────────────
+function abrirMed(id){
+  const a=DATA.find(x=>x.id===id); if(!a) return; cur=a;
+  $("mMedT").textContent="Nueva Medición";
+  $("mMedS").textContent=a.nombre;
+  $("mPeso").value=a.peso||""; $("mTalla").value=a.talla||"";
+  $("mCin").value=a.cintura_cm||""; $("mFecha").value=hoy();
+  prevMed(); openM("mMed");
+}
+
+function prevMed(){
+  const p=parseFloat($("mPeso").value), t=parseFloat($("mTalla").value)/100, c=parseFloat($("mCin").value)||null;
+  const el=$("medPrev");
+  if(p>0&&t>0){
+    const imc=+(p/(t*t)).toFixed(1), est=calcEstado(imc), eb=eBase(est);
+    const whtr=c?+(c/(t*100)).toFixed(2):null, col=EC(eb);
+    const bg={Normal:"var(--ok-l)","Bajo Peso":"var(--warn-l)",Sobrepeso:"var(--hi-l)",Obesidad:"var(--dan-l)"}[eb]||"var(--bg)";
+    $("medPrevV").textContent=imc; $("medPrevV").style.color=col;
+    $("medPrevE").textContent=est; $("medPrevE").style.color=col;
+    $("medPrevW").textContent=whtr?`WHtR: ${whtr} ${whtr>=0.5?"⚠️ Riesgo abdominal":"✅ Sin riesgo"}` :"";
+    el.style.cssText=`display:block;background:${bg};border-color:${col}`;
+  } else el.style.display="none";
+}
+
+async function saveMed(){
+  if(!cur) return;
+  const p=parseFloat($("mPeso").value), t=parseFloat($("mTalla").value), c=parseFloat($("mCin").value)||null, f=$("mFecha").value;
+  if(!p||!t||!f){ toast("⚠️ Complete peso, talla y fecha"); return; }
+  const imc=+(p/((t/100)**2)).toFixed(1), whtr=c?+(c/t).toFixed(2):null, est=calcEstado(imc);
+  spin("Guardando en Google Sheet…");
+  try{
+    const r=await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"nuevaMedicion",id_alumno:cur.id,nombre:cur.nombre,grado:cur.grado,seccion:cur.seccion,fecha:f,peso:p,talla:t,imc,cintura_cm:c,whtr,estado:est,usuario:user.email})});
+    const d=await r.json(); unspin();
+    toast(d.ok?"💾 Medición guardada en Google Sheet ✅":"💾 Guardado — sincronizando Sheet…");
+  }catch{ unspin(); toast(isDemo?"💾 Guardado en demo":"💾 Guardado localmente"); }
+  Object.assign(cur,{peso:p,talla:t,imc,cintura_cm:c,whtr,estado:est,eb:eBase(est),recomendacion:autoRec(est,cur.nombre)});
+  cur.historial.push({fecha:f,peso:p,talla:t,imc,estado:est});
+  closeM("mMed"); verDet(cur.id); renderDash();
+}
+
+// ── REPORTE WHATSAPP ──────────────────────────────────────
+function openRep(){
+  if(!cur||cur.eb==="Normal") return; const a=cur;
+  const urg=a.eb==="Obesidad"||(a.imc<14);
+  const msg=urg
+    ?`⚠️ ATENCIÓN URGENTE — NutriCheck Escolar\n\nEstimado/a ${a.apoderado}:\n\nSu hijo/a ${a.nombre} (${a.grado}, Sección ${a.seccion}) presenta ${a.estado} según la evaluación nutricional.\n\n📊 IMC: ${a.imc}${a.whtr?` · WHtR: ${a.whtr}`:""}\n\n${a.recomendacion}\n\n📍 Centro de Salud San Andrés, Pisco\n🔖 Presente este mensaje en recepción.\n\n— I.E. Cap. FAP Renán Elías Olivera · Programa NutriCheck`
+    :`Estimado/a ${a.apoderado}:\n\nSu hijo/a ${a.nombre} fue evaluado/a en el Programa NutriCheck Escolar.\n\n📊 Estado: ${a.estado} · IMC: ${a.imc}${a.whtr?` · WHtR: ${a.whtr}`:""}\n\n${a.recomendacion}\n\nPara orientación adicional puede acudir al Centro de Salud San Andrés.\n\n— I.E. Cap. FAP Renán Elías Olivera · Programa NutriCheck`;
+  $("repT").textContent=`Reporte: ${a.nombre}`;
+  $("repS").textContent=`Para: ${a.apoderado}${a.telefono?" · +"+a.telefono:""}`;
+  $("repBody").textContent=msg;
+  $("mRep").dataset.msg=msg;
+  openM("mRep");
+}
+
+async function sendRep(){
+  if(!cur) return; const a=cur;
+  let tel=(a.telefono||"").replace(/\D/g,"");
+  if(tel.length===9) tel="51"+tel; if(!tel.startsWith("51")) tel="51"+tel;
+  window.open(`https://api.whatsapp.com/send?phone=${tel}&text=${encodeURIComponent($("mRep").dataset.msg||"")}`, "_blank");
+  closeM("mRep");
+  try{ await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"guardarReporte",id_alumno:a.id,nombre:a.nombre,apoderado:a.apoderado,telefono:a.telefono,estado:a.estado,fecha:hoy(),usuario:user.email})}); }catch{}
+  toast("📨 Reporte enviado y registrado");
+}
+
+// ── DERIVAR / MEJORAR ─────────────────────────────────────
+async function marcar(id){
+  const a=DATA.find(x=>x.id===id); if(!a) return; spin("Actualizando Sheet…");
+  try{ await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"marcarDerivado",id_alumno:id,fecha:hoy(),usuario:user.email})}); }catch{}
+  a.derivado=true; unspin(); toast("✅ Alumno marcado como derivado al Centro de Salud"); verDet(id); renderDash();
+}
+
+async function marcarMej(id){
+  const a=DATA.find(x=>x.id===id); if(!a) return; spin("Actualizando Sheet…");
+  try{ await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"marcarMejoro",id_alumno:id,usuario:user.email})}); }catch{}
+  a.mejoro=true; unspin(); toast("📈 Alumno marcado como recuperado"); verDet(id); renderDash();
+}
+
+// ── NUEVO ALUMNO ──────────────────────────────────────────
+function abrirNuevo(){
+  ["nNom","nEdad","nPeso","nTalla","nCin","nApod","nTel","nRec"].forEach(i=>{$(i).value="";});
+  $("nuevoP").style.display="none"; openM("mNuevo");
+}
+
+function prevNuevo(){
+  const p=parseFloat($("nPeso").value), t=parseFloat($("nTalla").value)/100, c=parseFloat($("nCin").value)||null, el=$("nuevoP");
+  if(p>0&&t>0){
+    const imc=+(p/(t*t)).toFixed(1), est=calcEstado(imc), eb=eBase(est);
+    const whtr=c?+(c/(t*100)).toFixed(2):null, col=EC(eb);
+    const bg={Normal:"var(--ok-l)","Bajo Peso":"var(--warn-l)",Sobrepeso:"var(--hi-l)",Obesidad:"var(--dan-l)"}[eb]||"var(--bg)";
+    $("nPrevV").textContent=imc; $("nPrevV").style.color=col;
+    $("nPrevE").textContent=`Estado: ${est}`; $("nPrevE").style.color=col;
+    $("nPrevW").textContent=whtr?`WHtR: ${whtr} ${whtr>=0.5?"⚠️ Riesgo abdominal":"✅ Sin riesgo"}` :"";
+    el.style.cssText=`display:block;background:${bg};border-color:${col}`;
+    if(!$("nRec").value||$("nRec").dataset.auto==="1"){ $("nRec").value=autoRec(est,$("nNom").value); $("nRec").dataset.auto="1"; }
+  } else el.style.display="none";
+}
+
+async function saveNuevo(){
+  const nom=$("nNom").value.trim(), p=parseFloat($("nPeso").value), t=parseFloat($("nTalla").value), c=parseFloat($("nCin").value)||null;
+  if(!nom||!p||!t){ toast("⚠️ Nombre, peso y talla son obligatorios"); return; }
+  const imc=+(p/((t/100)**2)).toFixed(1), whtr=c?+(c/t).toFixed(2):null, est=calcEstado(imc);
+  const rec=$("nRec").value.trim()||autoRec(est,nom);
+  const newId=Math.max(...DATA.map(a=>a.id),0)+1;
+  spin("Registrando alumno en Sheet…");
+  try{ await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"nuevoAlumno",id:newId,nombre:nom,grado:$("nGrado").value,seccion:$("nSec").value,edad:parseInt($("nEdad").value)||0,sexo:$("nSexo").value,peso:p,talla:t,imc,cintura_cm:c,whtr,estado:est,apoderado:$("nApod").value.trim(),telefono:$("nTel").value.trim(),recomendacion:rec,usuario:user.email})}); toast("✅ Alumno registrado en Google Sheet"); }catch{ toast(isDemo?"✅ Alumno añadido al demo":"✅ Registrado localmente"); }
+  DATA.push({id:newId,nombre:nom,grado:$("nGrado").value,seccion:$("nSec").value,edad:parseInt($("nEdad").value)||0,sexo:$("nSexo").value,peso:p,talla:t,imc,cintura_cm:c,whtr,estado:est,eb:eBase(est),derivado:false,mejoro:false,recomendacion:rec,apoderado:$("nApod").value.trim()||"No registrado",telefono:$("nTel").value.trim(),historial:[{fecha:hoy(),peso:p,talla:t,imc,estado:est}]});
+  unspin(); closeM("mNuevo"); renderDash(); renderList();
+}
+
+// ── CSV ───────────────────────────────────────────────────
+function exportCSV(){
+  const h="ID,Nombre,Grado,Sección,Edad,Sexo,Peso(kg),Talla(cm),IMC,Cintura(cm),WHtR,Estado,Derivado,Mejoró,Apoderado,Teléfono,Recomendación";
+  const rows=DATA.map(a=>`${a.id},"${a.nombre}","${a.grado}",${a.seccion},${a.edad},${a.sexo},${a.peso},${a.talla},${a.imc},${a.cintura_cm||""},${a.whtr||""},"${a.estado}",${a.derivado?"SÍ":"NO"},${a.mejoro?"SÍ":"NO"},"${a.apoderado}",${a.telefono},"${(a.recomendacion||"").replace(/"/g,"'")}"`).join("\n");
+  const blob=new Blob([h+"\n"+rows],{type:"text/csv;charset=utf-8;"}), url=URL.createObjectURL(blob), el=document.createElement("a");
+  el.href=url; el.download=`nutricheck_${hoy()}.csv`; el.click();
+  toast("📎 CSV exportado correctamente");
+}
+
+// ── PERFIL ────────────────────────────────────────────────
+function renderPerfil(){ $("pNombre").textContent=user.nombre||user.email||"Usuario"; $("pEmail").textContent=user.email||"—"; }
+
+// ── NAVEGACIÓN ────────────────────────────────────────────
+function goPage(p){
+  document.querySelectorAll(".page").forEach(el=>el.classList.remove("ap"));
+  document.querySelectorAll(".nbt").forEach(el=>el.classList.remove("on"));
+  const pm={dash:"pgDash",alumnos:"pgAlumnos",detalle:"pgDetalle",perfil:"pgPerfil"};
+  const nm={dash:"nDash",alumnos:"nAlum",perfil:"nPerf"};
+  if(pm[p]) $(pm[p]).classList.add("ap");
+  if(nm[p]) $(nm[p]).classList.add("on");
+  if(p==="alumnos"){ initFilters(); renderList(); }
+  $("contentArea").scrollTop=0;
+}
+
+// ── INIT ─────────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded",()=>{
+  setTimeout(()=>{ $("loader").classList.add("out"); $("login").style.display="flex"; },1600);
+  const up=new URLSearchParams(window.location.search);
+  if(up.get("modo")==="publico") setTimeout(accPublico,1700);
+});
+
+Object.assign(window,{doLogin,setDemo,accPublico,doLogout,recargar,goPage,goBack,verDet,fGo,setCF,applyFilter,clearFilter,renderList,abrirMed,prevMed,saveMed,openRep,sendRep,closeM,marcar,marcarMej,openRiskTable,exportCSV,abrirNuevo,prevNuevo,saveNuevo,calcQuick});
+</script>
+</body>
+</html>
