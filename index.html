@@ -335,6 +335,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);overflow:hidde
 .btn-red:hover{filter:brightness(1.06)}
 .btn-done{background:var(--green-100);color:var(--green-600);cursor:default;border:1px solid #bbf7d0}
 .btn-warn{background:linear-gradient(135deg,var(--amber-700),var(--amber-500));color:#fff}
+.btn-green{background:linear-gradient(135deg,var(--green-600),var(--green-400));color:#fff;box-shadow:0 3px 10px rgba(22,163,74,.25)}
+.btn-green:hover{filter:brightness(1.06)}
 .btn-teal{background:linear-gradient(135deg,var(--teal-700),var(--teal-500));color:#fff;box-shadow:0 3px 10px rgba(26,107,107,.25)}
 .btn-teal:hover{filter:brightness(1.06)}
 
@@ -735,7 +737,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);overflow:hidde
 // ══════════════════════════════════════════════════════════
 //  CONFIGURACIÓN — Pegue aquí la URL de su Apps Script
 // ══════════════════════════════════════════════════════════
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbzEZYn1lE52BujeYfATNFZJ8klNaIfmuaONgvA9zSAbvvaOa7wnCoiB-69lCd1KATuH4Q/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbx9j8dI1S-QqrnFD7MkXxgEGDBA__G3YoGSEtvxD6uU3XSfA50QPvva-8PSGejTCQ-Kcw/exec";
 
 // ── Estado global ─────────────────────────────────────────
 let DATA=[], cur=null, curFilter="todos";
@@ -1158,12 +1160,25 @@ function verDet(id){
   const canEdit=modo==="salud"||modo==="ugel";
   let acts="";
   if(canEdit){
-    acts+=`<button class="btn-act btn-teal" onclick="abrirMed(${a.id})">Registrar nueva medición</button>`;
+    acts+=`<button class="btn-act btn-teal" onclick="abrirMed(${a.id})">
+      <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Registrar nueva medición
+    </button>`;
+    // Reporte WhatsApp — disponible para TODOS los alumnos con teléfono
+    acts+=`<button class="btn-act btn-whatsapp" onclick="openRep()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.476 2 2 6.477 2 12.001c0 1.765.461 3.527 1.338 5.079L2.05 21.95l4.998-1.31A9.956 9.956 0 0012 22c5.522 0 10-4.478 10-10S17.521 2 11.999 2zm0 18c-1.617 0-3.163-.44-4.507-1.272l-.323-.191-3.028.794.809-2.957-.21-.341A7.964 7.964 0 014 12c0-4.411 3.589-8 8-8 4.41 0 8 3.589 8 8s-3.59 8-8 8z"/></svg>
+      Enviar reporte al apoderado
+    </button>`;
     if(a.eb!=="Normal"){
-      acts+=`<button class="btn-act btn-green" onclick="openRep()">Enviar reporte al apoderado</button>`;
-      if(!a.derivado) acts+=`<button class="btn-act btn-red" onclick="marcar(${a.id})">Marcar como derivado al CS</button>`;
-      else acts+=`<button class="btn-act btn-done">Ya derivado al Centro de Salud</button>`;
-      if(!a.mejoro) acts+=`<button class="btn-act btn-warn" onclick="marcarMej(${a.id})">Marcar como recuperado</button>`;
+      if(!a.derivado) acts+=`<button class="btn-act btn-red" onclick="marcar(${a.id})">
+        <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .98h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        Marcar como derivado al CS
+      </button>`;
+      else acts+=`<button class="btn-act btn-done">✓ Ya derivado al Centro de Salud</button>`;
+      if(!a.mejoro) acts+=`<button class="btn-act btn-warn" onclick="marcarMej(${a.id})">
+        <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Marcar como recuperado
+      </button>`;
     }
   }
   $("detActs").innerHTML=acts;
@@ -1236,7 +1251,7 @@ async function saveMed(){
 
 // ── REPORTE WHATSAPP ──────────────────────────────────────
 function openRep(){
-  if(!cur||cur.eb==="Normal") return; const a=cur;
+  if(!cur) return; const a=cur;
   const urg=a.eb==="Obesidad"||(a.imc>0&&a.imc<14);
   const msg=urg
     ?`⚠️ ATENCIÓN URGENTE — NutriCheck Escolar\n\nEstimado/a ${a.apoderado}:\n\nSu hijo/a ${a.nombre} (${a.grado}, Sección ${a.seccion}) presenta ${a.estado} según la evaluación nutricional.\n\n📊 IMC: ${a.imc}${a.whtr?` · WHtR: ${a.whtr}`:""}\n\n${a.recomendacion}\n\n📍 Centro de Salud San Andrés, Pisco\n🔖 Presente este mensaje en recepción.\n\n— I.E. Cap. FAP Renán Elías Olivera · Programa NutriCheck`
