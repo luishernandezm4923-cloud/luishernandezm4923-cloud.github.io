@@ -737,7 +737,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);overflow:hidde
 // ══════════════════════════════════════════════════════════
 //  CONFIGURACIÓN — Pegue aquí la URL de su Apps Script
 // ══════════════════════════════════════════════════════════
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbzS0Str-XfRxjHvrm5EYcmGIaW8qXZMKIPDBnUAongq3Zl9gYmYDnVtMlDaNAtbVduqHQ/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbx9j8dI1S-QqrnFD7MkXxgEGDBA__G3YoGSEtvxD6uU3XSfA50QPvva-8PSGejTCQ-Kcw/exec";
 
 // ── Estado global ─────────────────────────────────────────
 let DATA=[], cur=null, curFilter="todos";
@@ -1227,7 +1227,7 @@ async function saveMed(){
   try{
     const r=await fetch(SHEET_URL,{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      headers:{"Content-Type":"text/plain"},
       body:JSON.stringify({
         action:"nuevaMedicion",
         id_alumno:cur.id, nombre:cur.nombre, grado:cur.grado, seccion:cur.seccion,
@@ -1237,10 +1237,10 @@ async function saveMed(){
     });
     const d=await r.json(); unspin();
     savedOk=d.ok;
-    toast(d.ok?"Medición guardada en Google Sheet ✓":"Error al guardar — verifique conexión");
+    toast(d.ok?"Medición guardada en Google Sheet ✓":"Error: "+(d.error||"respuesta inesperada del servidor"));
   }catch(e){
     unspin();
-    toast(isDemo?"Guardado en demo (sin conexión)":"Error de red — datos guardados localmente");
+    toast(isDemo?"Guardado en demo (sin conexión)":"Error de red — verifique que la URL del script sea correcta");
   }
 
   // Actualizar estado local siempre (independiente del Sheet)
@@ -1269,21 +1269,39 @@ async function sendRep(){
   if(tel.length===9) tel="51"+tel; if(!tel.startsWith("51")) tel="51"+tel;
   window.open(`https://api.whatsapp.com/send?phone=${tel}&text=${encodeURIComponent($("mRep").dataset.msg||"")}`, "_blank");
   closeM("mRep");
-  try{ await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"guardarReporte",id_alumno:a.id,nombre:a.nombre,apoderado:a.apoderado,telefono:a.telefono,estado:a.estado,fecha:hoy(),usuario:user.email})}); }catch{}
+  try{ await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"guardarReporte",id_alumno:a.id,nombre:a.nombre,apoderado:a.apoderado,telefono:a.telefono,estado:a.estado,fecha:hoy(),usuario:user.email})}); }catch{}
   toast("Reporte enviado y registrado");
 }
 
 // ── DERIVAR / MEJORAR ─────────────────────────────────────
 async function marcar(id){
   const a=DATA.find(x=>x.id===id); if(!a) return; spin("Actualizando Sheet…");
-  try{ await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"marcarDerivado",id_alumno:id,fecha:hoy(),usuario:user.email})}); }catch{}
-  a.derivado=true; unspin(); toast("Alumno marcado como derivado al CS"); verDet(id); renderDash();
+  try{
+    const r=await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"marcarDerivado",id_alumno:id,fecha:hoy(),usuario:user.email})});
+    const d=await r.json(); unspin();
+    if(d.ok){ a.derivado=true; toast("Alumno marcado como derivado al CS ✓"); }
+    else { toast("Error al marcar: "+(d.error||"desconocido")); return; }
+  }catch(e){
+    unspin();
+    if(!isDemo){ toast("Error de red al marcar derivado"); return; }
+    a.derivado=true; toast("Marcado localmente (demo)");
+  }
+  verDet(id); renderDash();
 }
 
 async function marcarMej(id){
   const a=DATA.find(x=>x.id===id); if(!a) return; spin("Actualizando Sheet…");
-  try{ await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"marcarMejoro",id_alumno:id,usuario:user.email})}); }catch{}
-  a.mejoro=true; unspin(); toast("Alumno marcado como recuperado"); verDet(id); renderDash();
+  try{
+    const r=await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"marcarMejoro",id_alumno:id,usuario:user.email})});
+    const d=await r.json(); unspin();
+    if(d.ok){ a.mejoro=true; toast("Alumno marcado como recuperado ✓"); }
+    else { toast("Error al marcar: "+(d.error||"desconocido")); return; }
+  }catch(e){
+    unspin();
+    if(!isDemo){ toast("Error de red al marcar recuperado"); return; }
+    a.mejoro=true; toast("Marcado localmente (demo)");
+  }
+  verDet(id); renderDash();
 }
 
 // ── NUEVO ALUMNO ──────────────────────────────────────────
@@ -1333,7 +1351,7 @@ async function saveNuevo(){
   try{
     const r=await fetch(SHEET_URL,{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      headers:{"Content-Type":"text/plain"},
       body:JSON.stringify({
         action:"nuevoAlumno",
         id:newId, nombre:nom,
